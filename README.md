@@ -23,5 +23,5 @@ As a preview, here is a demo of the results -- see [this notebook](http://nbview
 
 **subsequent lines**: partitioned segments of the original signal, based on local Holder exponent extrema. More extrema are used for the partitioning as you descend.
 
-![Demo of Partitioning](https://github.com/buckie/wtmm-python/raw/master/clustering_demo.png)
+![Demo of Partitioning](https://github.com/buckie/wtmm-python/raw/master/notebooks/clustering_demo.png)
 
