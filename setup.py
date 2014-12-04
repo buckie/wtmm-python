@@ -2,8 +2,8 @@ from setuptools import setup
 import sys
 
 
-if sys.version_info.major < 3:
-    print("This was created with python 3 in mind, though back porting should be easy")
+if sys.version_info.major > 3:
+    print("This was created with python 2 in mind, though porting should be easy")
     sys.exit(1)
 
 setup(

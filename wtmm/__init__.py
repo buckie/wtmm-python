@@ -1,3 +1,5 @@
+from __future__ import division, absolute_import, print_function
+
 __author__ = 'wjm'
 __all__ = [
     'wtmm',
@@ -13,9 +15,8 @@ from collections import OrderedDict
 from scipy import signal
 from numpy import log
 
-import matplotlib as plt
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def _sort_tuples(x, y):
     """
@@ -72,14 +73,14 @@ def walk_bifurcation(mtx, start_row, start_col, proximity=9):
     :return: tuple(bool, list of coordinates) - bool for if the line hits the ground, coodinates of the points consumed
     :raise ValueError:
     """
-    slope = 0
+    signal_strengths = []
     center_row, center_col = start_row, start_col
     max_row, max_col = [i - 1 for i in mtx.shape]
     trace_rt = []
 
     while center_row > 0:
 
-        # get the prox bounds
+        # get the proximity bounds for a given point in the matrix (addresses to look in)
         right_bound = center_col + proximity + 1
         left_bound = center_col - proximity
         hood_center_col = proximity
@@ -108,28 +109,32 @@ def walk_bifurcation(mtx, start_row, start_col, proximity=9):
             hood_center_row = proximity
 
 
-        # get the neighborhood...
+        # get the neighborhood of addresses...
         hood = mtx[lower_bound:center_row + 1, left_bound:right_bound]
 
         # find the best choice for the ridge
         possibles = _possible_direction(hood, center_row=hood_center_row, center_col=hood_center_col)
 
         if not possibles:
-            # Means we've failed to hit the ground
+            # Means we've failed to hit the ground -- the algorithm will walk the path all the way to 0 or fail
             return False, trace_rt
 
         # get the winner
         match = possibles.pop(0)
 
-        # recompute the center and continue
-        match_hood_row, match_hood_col = match[2]
+        # recompute the center of the addresses and continue
+        _, strength, (match_hood_row, match_hood_col) = match
 
-        # TODO: we need to keep track of the movement of the curves
+
 
         # match_hood_row < proximity always (this moves us up the matrix rows) but is always off by 1
         center_row += match_hood_row - hood_center_row
         # this can be +/- depending on the direction
         center_col += match_hood_col - hood_center_col
+        # track the signal strength as well
+        signal_strengths.append(strength)
+
+        # TODO: we need to keep track of the movement of the curves
 
         if center_row >= 0:
             trace_rt.append((center_row, center_col))
