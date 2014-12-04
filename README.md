@@ -7,7 +7,7 @@ Implementation of the Wavelet Transform Modulus Maxima algorithm in python for t
 
 This uses python3 and the easiest way to install the environment is to install Continuum's Anaconda and run the following command:
 
-    conda create -n wtmm python=3.4.2 scipy numpy matplotlib ipython-notebook pip setuptools
+    conda create -n wtmm python=3.4.2 scipy numpy matplotlib ipython-notebook pip setuptools pandas
     source activate wtmm
 
 ## Research
