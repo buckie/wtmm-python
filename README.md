@@ -1,13 +1,13 @@
 wtmm-python
 ===========
 
-Implementation of the Wavelet Transform Modulus Maxima algorithm in python for the purpose of deconstructing 1-D time series data into a peicewise linear representation, parititioned according to similarity.
+Implementation of the Wavelet Transform Modulus Maxima algorithm in python for the purpose of deconstructing 1-D time series data into a piecewise linear representation, partitioned according to similarity.
 
 ### Replicate Environment
 
-This uses python3 and the easiest way to install the environment is to install Continuum's Anaconda and run the following command:
+This uses python2 and the easiest way to install the environment is to install Continuum's Anaconda and run the following command:
 
-    conda create -n wtmm python=3.4.2 scipy numpy matplotlib ipython-notebook pip setuptools pandas
+    conda create -n wtmm python=2.7 scipy numpy matplotlib ipython-notebook pip setuptools pandas
     source activate wtmm
 
 ## Research
