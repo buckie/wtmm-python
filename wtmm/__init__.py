@@ -18,6 +18,7 @@ from numpy import log
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def _sort_tuples(x, y):
     """
     Special sort for the tuples, used to rank which point in the hood is "next". The preference is closest,
@@ -164,7 +165,7 @@ def __print_hood(hood):
     plt.show()
 
 
-def skeletor(mtx, proximity=9, smallest_scale=0, plot=False):
+def skeletor(mtx, proximity=9, smallest_scale=0, top_threshold=0.5, corona_prox=1, plot=False):
     '''
     Skeleton Constructor
 
@@ -217,6 +218,10 @@ def skeletor(mtx, proximity=9, smallest_scale=0, plot=False):
                 cols_b = np.array(cols_b)
 
                 mtx[rows_b, cols_b] = 0
+
+    bifurcations = match_coronae(bifurcations,
+                                 top_threshold=int(top_threshold*max_row),
+                                 neighborhood_threshold=corona_prox)
 
     if plot:
         plt.figure(figsize=(14, 10))
@@ -324,3 +329,119 @@ def wtmm(sig, width_step=0.5, max_scale=None, wavelet=signal.ricker, epsilon=0.1
 
     return bifurcations
 
+
+def get_distance(rc0, rc1):
+    '''
+    Get the distance between two row-column points
+    '''
+    r0, c0 = rc0
+    r1, c1 = rc1
+    return ((c1 - c0) ** 2 + (r1 - r0) ** 2) ** 0.5
+
+
+def get_best_match(matched_lines, cur_pts, bifucs, neighborhood_threshold=1):
+    # lines in the hood
+    matches = []
+
+    threshold = (cur_pts[0][0] ** 0.5) * neighborhood_threshold // 1
+    if threshold < 3:
+        threshold = 3
+
+    # after handling a full traversal of the row domain, we can be sure that the corona are self
+    # contianed within the graph
+    for (n, v), pts in bifucs.iteritems():
+
+        # Again, guard against a double match with the added benefit of speeding up the loop.
+        # Things that have already been matched are also impossible to match against
+        # but would usually be processed first so skip them.
+        if n in matched_lines:
+            continue
+
+        # grab the top most point as our anchor -- what we match against.
+        anchor = pts[0]
+
+        # Now we walk pts and check each against the distance to the anchor. We want to track what the current minimum
+        # distance because once it begins to increase, we can stop the algorithm.
+        # Further, we can default the best_distance value to the distance between the anchor and the start of pts.
+
+        best_distance = get_distance(cur_pts[0], anchor)
+        pts_idx = None
+
+        for idx, pt in enumerate(cur_pts):
+            dist = get_distance(pt, anchor)
+            if dist < best_distance:
+                best_distance = dist
+                pts_idx = idx
+            elif dist > best_distance:
+                break
+
+        # We only want to track distances that better the last iteration's distance
+        if best_distance <= threshold:
+            matches.append(((n, v), pts_idx, best_distance))
+            break
+
+    if matches:
+        # Just defaulting here to avoid a branching if-else statement
+        winning_match = matches[0]
+        for match in matches:
+            # test the distance of each element of the list... easier than making a custom sort
+            if match[2] < winning_match[2]:
+                winning_match = match
+        return winning_match
+    else:
+        return (None, None, None)
+
+
+def match_coronae(bifucs, top_threshold, neighborhood_threshold=1):
+    '''
+    Takes the individual bifurcation lines and returns an ordered dict of
+    (rank, x-axis point, corona -> bool): [(row,col)]
+    '''
+
+    matched_lines = set()
+    coronae = OrderedDict()
+    for i, ((n, v), pts) in enumerate(bifucs.iteritems()):
+
+        # check that the current item hasn't already been matched against
+        if n in matched_lines:
+            continue
+        else:
+            # if the current number is not matched, then add it now
+            matched_lines.add(n)
+
+        # get the starting coordinates
+        row_max, col_max = pts[0]
+        row_min, col_min = pts[-1]
+
+        # handle lines that traverse nearly the entire graph differently
+        if row_max > top_threshold:
+            coronae[(i, v, (pts[-1][1]))] = pts
+            matched_lines.add(n)
+            continue
+
+        # This returns the first match against the current segment. The first should be the best.
+        # pts_idx is the place to snip the tail off of the current line and glue the match and the current line together
+        match_key, pts_idx, _ = get_best_match(matched_lines, pts, bifucs)
+
+        if not match_key:
+            coronae[(i, v, (pts[0][1]))] = pts
+            continue
+        match_pts = bifucs[match_key]
+
+        # left and right here are just for clarity in logic, the parts may in fact be
+        # reversed in order (but it doesn't matter)
+        left = pts[pts_idx:]
+        right = match_pts
+
+        # the 0-index has the max row for each part
+        corona_max = left[0][0] if left[0][0] > right[0][0] else right[0][0]
+        # now glue it all together
+        corona = left[::-1] + right[:]
+
+        coronae[(i, v, (corona[0][1], corona[-1][0]))] = corona
+
+        # add the components to the matched set
+        matched_lines.add(n)
+        matched_lines.add(match_key[0])
+
+    return coronae
