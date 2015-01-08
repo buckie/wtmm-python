@@ -31,7 +31,7 @@ def create_w_coef_mask(w_coefs, epsilon=0.1, order=1):
 
 
 def wtmm(sig, width_step=0.5, max_scale=None, wavelet=signal.ricker, epsilon=0.1,
-         order=1, smallest_scale=0, proximity=9, corona_prox=1, top_threshold=0.05, plot=True):
+         order=1, smallest_scale=0, proximity=9, corona_prox=1, top_threshold=0.05, plot=False):
     """
     Just a fast path to run perform_cwt and skeletor together
 
@@ -63,7 +63,7 @@ def wtmm(sig, width_step=0.5, max_scale=None, wavelet=signal.ricker, epsilon=0.1
     return bifurcations
 
 
-def perform_cwt(sig, width_step=0.5, max_scale=None, wavelet=signal.ricker, epsilon=0.1, order=1, plot=True):
+def perform_cwt(sig, width_step=0.5, max_scale=None, wavelet=signal.ricker, epsilon=0.1, order=1, plot=False):
     """
     Perform the continuous wavelet transform against the incoming signal. This function will normalize the signal
     (to 0-1 in the y axis) for you, as well as taking the -1 * abs( log( ) ) of the matrix that is found. Literature

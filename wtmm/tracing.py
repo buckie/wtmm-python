@@ -299,7 +299,7 @@ def match_coronae(bifucs, top_threshold, corona_prox=1):
 
         # handle lines that traverse nearly the entire graph differently
         if row_max > top_threshold:
-            coronae[(i, v, (pts[-1][1]))] = pts
+            coronae[(i, pts[0][0], (pts[-1][1]))] = pts
             matched_lines.add(n)
             continue
 
@@ -308,7 +308,7 @@ def match_coronae(bifucs, top_threshold, corona_prox=1):
         match_key, pts_idx, _ = get_best_match(matched_lines, pts, bifucs, corona_prox=corona_prox)
 
         if not match_key:
-            coronae[(i, v, (pts[0][1]))] = pts
+            coronae[(i, pts[0][0], (pts[0][1]))] = pts
             continue
         match_pts = bifucs[match_key]
 
@@ -322,7 +322,7 @@ def match_coronae(bifucs, top_threshold, corona_prox=1):
         # now glue it all together
         corona = left[::-1] + right[:]
 
-        coronae[(i, v, (corona[0][1], corona[-1][1]))] = corona
+        coronae[(i, corona_max, (corona[0][1], corona[-1][1]))] = corona
 
         # add the components to the matched set
         matched_lines.add(n)
