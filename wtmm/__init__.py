@@ -165,7 +165,7 @@ def __print_hood(hood):
     plt.show()
 
 
-def skeletor(mtx, proximity=9, smallest_scale=0, top_threshold=0.5, corona_prox=1, plot=False):
+def skeletor(mtx, proximity=9, smallest_scale=0, top_threshold=0.05, corona_prox=1, plot=False):
     '''
     Skeleton Constructor
 
@@ -219,13 +219,13 @@ def skeletor(mtx, proximity=9, smallest_scale=0, top_threshold=0.5, corona_prox=
 
                 mtx[rows_b, cols_b] = 0
 
-    bifurcations = match_coronae(bifurcations,
-                                 top_threshold=int(top_threshold*max_row),
-                                 neighborhood_threshold=corona_prox)
+    coronae = match_coronae(bifurcations,
+                            top_threshold=int(max_row-(top_threshold*max_row)),
+                            neighborhood_threshold=corona_prox)
 
     if plot:
         plt.figure(figsize=(14, 10))
-        for n, (k, v) in enumerate(bifurcations.items()):
+        for n, (k, v) in enumerate(coronae.items()):
             rows, cols = zip(*v)
             plt.plot(cols, rows)
         ax = plt.gca()
@@ -233,7 +233,7 @@ def skeletor(mtx, proximity=9, smallest_scale=0, top_threshold=0.5, corona_prox=
         ax.xaxis.tick_top()
         plt.show()
 
-    return bifurcations
+    return coronae
 
 
 def _create_w_coef_mask(w_coefs, epsilon=0.1, order=1):
@@ -330,39 +330,40 @@ def wtmm(sig, width_step=0.5, max_scale=None, wavelet=signal.ricker, epsilon=0.1
     return bifurcations
 
 
+
 def get_distance(rc0, rc1):
     '''
     Get the distance between two row-column points
     '''
     r0, c0 = rc0
     r1, c1 = rc1
-    return ((c1 - c0) ** 2 + (r1 - r0) ** 2) ** 0.5
+    return ( (c1 - c0)**2 + (r1 - r0)**2 )**0.5
 
 
 def get_best_match(matched_lines, cur_pts, bifucs, neighborhood_threshold=1):
+
     # lines in the hood
     matches = []
 
-    threshold = (cur_pts[0][0] ** 0.5) * neighborhood_threshold // 1
+    threshold = (cur_pts[0][0]**0.5)*(neighborhood_threshold)//1
     if threshold < 3:
         threshold = 3
 
-    # after handling a full traversal of the row domain, we can be sure that the corona are self
-    # contianed within the graph
-    for (n, v), pts in bifucs.iteritems():
+    # after handling a full traversal of the row domain, we can be sure that the corona are self contianed within the graph
+    for (n,v), pts in bifucs.iteritems():
 
         # Again, guard against a double match with the added benefit of speeding up the loop.
-        # Things that have already been matched are also impossible to match against
-        # but would usually be processed first so skip them.
+        # Things that have already been matched are also impossible to match against but would usually be processed first
+        # so skip them.
         if n in matched_lines:
             continue
 
         # grab the top most point as our anchor -- what we match against.
         anchor = pts[0]
 
-        # Now we walk pts and check each against the distance to the anchor. We want to track what the current minimum
-        # distance because once it begins to increase, we can stop the algorithm.
-        # Further, we can default the best_distance value to the distance between the anchor and the start of pts.
+        # Now we walk pts and check each against the distance to the anchor. We want to track what the current minimum distance
+        # because once it begins to increase, we can stop the algorithm. Further, we can default the best_distance value
+        # to the distance between the anchor and the start of pts.
 
         best_distance = get_distance(cur_pts[0], anchor)
         pts_idx = None
@@ -391,16 +392,14 @@ def get_best_match(matched_lines, cur_pts, bifucs, neighborhood_threshold=1):
     else:
         return (None, None, None)
 
-
 def match_coronae(bifucs, top_threshold, neighborhood_threshold=1):
     '''
-    Takes the individual bifurcation lines and returns an ordered dict of
-    (rank, x-axis point, corona -> bool): [(row,col)]
+    Takes the individual bifurcation lines and returns an ordered dict of (rank, x-axis point, corona -> bool): [(row,col)]
     '''
 
     matched_lines = set()
     coronae = OrderedDict()
-    for i, ((n, v), pts) in enumerate(bifucs.iteritems()):
+    for i, ((n,v), pts) in enumerate(bifucs.iteritems()):
 
         # check that the current item hasn't already been matched against
         if n in matched_lines:
@@ -428,8 +427,7 @@ def match_coronae(bifucs, top_threshold, neighborhood_threshold=1):
             continue
         match_pts = bifucs[match_key]
 
-        # left and right here are just for clarity in logic, the parts may in fact be
-        # reversed in order (but it doesn't matter)
+        # left and right here are just for clarity in logic, the parts may in fact be reversed in order (but it doesn't matter)
         left = pts[pts_idx:]
         right = match_pts
 
@@ -438,7 +436,7 @@ def match_coronae(bifucs, top_threshold, neighborhood_threshold=1):
         # now glue it all together
         corona = left[::-1] + right[:]
 
-        coronae[(i, v, (corona[0][1], corona[-1][0]))] = corona
+        coronae[(i, v, (corona[0][1],corona[-1][0]))] = corona
 
         # add the components to the matched set
         matched_lines.add(n)
