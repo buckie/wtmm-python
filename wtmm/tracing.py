@@ -322,7 +322,7 @@ def match_coronae(bifucs, top_threshold, corona_prox=1):
         # now glue it all together
         corona = left[::-1] + right[:]
 
-        coronae[(i, v, (corona[0][1], corona[-1][0]))] = corona
+        coronae[(i, v, (corona[0][1], corona[-1][1]))] = corona
 
         # add the components to the matched set
         matched_lines.add(n)

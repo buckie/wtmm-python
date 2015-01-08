@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def financial_cartoon(Iterations=10, Multifractal=1, noise_type=None, noise_level=1.0, plot=False):
+def financial_cartoon(Iterations=10, Multifractal=1, noise_type=False, noise_level=1.0, plot=False):
     if Multifractal:
         turns = ((0.25, 0.5), (0.75, 0.25))
     else:
